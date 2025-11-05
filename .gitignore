@@ -1,0 +1,6 @@
+# Ignorar archivos de datos y logs
+*.csv
+*.log
+*.tmp
+*.bak
+
