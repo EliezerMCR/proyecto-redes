@@ -132,3 +132,118 @@ Verifica que no quede ninguno ejecutándose:
 ```bash
 ps aux | grep monitor_
 ```
+
+
+--------------------------------------------------------------------------------------------
+
+# API
+
+## Arquitectura del Sistema
+
+1.  **Servidor Web (Apache):** Es el punto de entrada público (Puerto 80). Recibe todas las peticiones de los clientes. Su trabajo es actuar como "recepcionista" y redirigir las peticiones a la aplicación web.
+
+2.  **Servidor de Aplicación (FastAPI):** Es el "cerebro" y el componente que genera la carga. Es una API de Python que se ejecuta en su propia máquina (Puerto 5000) y realiza una tarea de CPU intensiva cuando es llamada.
+
+3.  **Scripts de Monitoreo (Bash):** Un conjunto de scripts de `shell` que se ejecutan en el servidor de aplicación para registrar los "signos vitales" del sistema (CPU, memoria, latencia) durante las pruebas.
+
+El flujo de una petición de prueba es el siguiente:
+`Cliente` -> `IP del Servidor Apache:80` -> (Proxy) -> `IP del Servidor de Aplicación:5000`
+
+---
+
+## Componentes
+
+### 1. La Aplicación Web (API de FastAPI)
+
+Es el "consumidor de CPU" diseñado para cumplir con la Tarea 1.
+
+* **Archivo:** `main.py`
+* **Servidor:** Se ejecuta con `uvicorn`.
+* **Endpoint:** `GET /cpu`
+* **Parámetro:** `iteraciones` (ej. `/cpu?iteraciones=5000000`)
+* **Funcionamiento:** Al recibir una petición, la API ejecuta un bucle `for` que calcula `math.sqrt(i) * math.sin(i)` un número `iteraciones` de veces.
+    * **Complejidad:** Esta operación tiene una complejidad temporal **O(n)**, donde `n` es el número de `iteraciones`. Esto nos da un control lineal y predecible sobre la cantidad de carga de CPU que queremos generar.
+
+### 2. Los Scripts de Monitoreo
+
+Estos scripts (`.sh`) cumplen con las Tareas 2 y 3, recolectando datos en formato `.csv` para su posterior análisis.
+
+* `monitor_cpu.sh`:
+    * **Propósito:** Mide la carga interna del servidor.
+    * **Métricas:** `% CPU (user, system, iowait)`, `load average` (1, 5, 15 min) y uso de `memoria` (usada, libre).
+    * **Salida:** `cpu_metrics.csv`
+
+* `monitor_io.sh`:
+    * **Propósito:** Mide la actividad de entrada/salida del disco.
+    * **Métricas:** `lecturas/s`, `escrituras/s` y `% de utilización` del disco.
+    * **Salida:** `io_metrics.csv`
+
+* `monitor_net.sh`:
+    * **Propósito:** Mide el tráfico de red de la interfaz.
+    * **Métricas:** `bytes recibidos (rx_bytes)` y `bytes enviados (tx_bytes)`.
+    * **Salida:** `net_metrics.csv`
+
+* `monitor_latency.sh`:
+    * **Propósito:** Mide el rendimiento de la red desde la perspectiva del cliente (Tarea 3).
+    * **Métricas:** `time_connect`, `time_starttransfer` y `time_total` de la respuesta.
+    * **Importante:** Este script está configurado para apuntar al **Servidor Apache (Puerto 80)**, midiendo así el tiempo de respuesta total del sistema, incluyendo la latencia de red y el proxy.
+
+* `recolectar_todo.sh`:
+    * **Propósito:** Es el script maestro para iniciar y detener todas las recolecciones de datos.
+    * **Funcionamiento:** Lanza todos los scripts `monitor_*.sh` como procesos en segundo plano. Al presionar `Ctrl+C`, captura la señal y detiene todos los procesos de monitoreo de forma limpia.
+
+---
+
+## Configuración e Instalación
+
+1.  **Dependencias del Sistema:**
+    Asegúrate de tener instaladas las herramientas de monitoreo. En sistemas basados en Debian/Ubuntu:
+    ```bash
+    sudo apt update
+    sudo apt install sysstat curl
+    ```
+
+2.  **Entorno Virtual de Python:**
+    Este proyecto usa un entorno virtual para gestionar las dependencias de Python y evitar conflictos con el sistema
+
+    ```bash
+    # 1. Crear el entorno virtual
+    python3 -m venv venv
+
+    # 2. Activar el entorno 
+    source venv/bin/activate
+    ```
+
+3.  **Dependencias de Python:**
+    Con el entorno activado, instala FastAPI y Uvicorn.
+
+    ```bash
+    (venv) $ pip install fastapi uvicorn
+    ```
+
+4.  **Archivo `.gitignore`:**
+    Asegúrate de que tu `.gitignore` incluya la carpeta `venv/` y los archivos de datos generados:
+    ```gitignore
+    # Entorno virtual de Python
+    venv/
+
+    # Ignorar archivos de datos y logs
+    *.csv
+    *.log
+    *.tmp
+    *.bak
+    metrics/
+    ```
+
+---
+
+## Flujo de Trabajo para una Prueba
+
+Este es el proceso para ejecutar un experimento completo y "sobresaturar al sistema" (Tarea 4).
+
+**Paso 1: Iniciar el Servidor de Aplicación (Tu Máquina)**
+En una terminal, activa el entorno virtual y ejecuta la API de FastAPI. Es crucial usar `0.0.0.0` para que sea visible para el servidor Apache.
+
+```bash
+source venv/bin/activate
+(venv) $ uvicorn main:app --host 0.0.0.0 --port 5000

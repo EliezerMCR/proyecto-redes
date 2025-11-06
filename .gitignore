@@ -4,3 +4,5 @@
 *.tmp
 *.bak
 
+# Entorno virtual de Python
+venv/
