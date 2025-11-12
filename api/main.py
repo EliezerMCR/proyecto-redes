@@ -5,6 +5,14 @@ import time
 
 app = fastapi.FastAPI()
 
+@app.get("/health")
+def health_check():
+    """
+    Endpoint de 'health check'.
+    Confirma si la app está viva.
+    """
+    return {"status": "ok"}
+
 @app.get("/cpu")
 def procesar_carga(iteraciones: int = 1000000):
     """
