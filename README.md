@@ -5,6 +5,33 @@
 Este conjunto de **scripts en Bash** automatiza la **recolección de métricas de rendimiento del servidor** durante pruebas de carga.
 Los scripts permiten registrar datos del sistema operativo (CPU, I/O, red, memoria y latencia) en archivos CSV para su posterior análisis y graficación.
 
+## 📈 Graficación de métricas (Python)
+
+El script `graficos/graficar.py` genera gráficos a partir de los `.csv` producidos por los scripts de monitoreo.
+
+- **Entrada esperada:**
+  - `cpu_metrics.csv` (CPU, load average y memoria)
+  - `latency_metrics.csv` (time_connect, time_starttransfer, time_total)
+- **Salida:**
+  - `graficos/1_carga_del_sistema.png`
+  - `graficos/2_latencia_de_respuesta.png`
+
+### Requisitos de Python
+
+Con el entorno virtual activado:
+
+```bash
+(venv) $ pip install pandas matplotlib
+```
+
+### Cómo ejecutar
+
+1. Tener los archivos `.csv` en el mismo directorio en el que ejecutaremos el script, o ajustar las rutas en `graficos/graficar.py`.
+2. Ejecutar:
+
+```bash
+(venv) $ python graficos/graficar.py
+```
 ---
 
 ## ⚙️ Estructura del proyecto
@@ -122,7 +149,6 @@ Deteniendo monitores...
 ## 🧹 Cómo detener manualmente todos los monitores
 
 En caso de que algún proceso quede activo tras una interrupción:
-
 ```bash
 pkill -f monitor_
 ```
@@ -132,26 +158,6 @@ Verifica que no quede ninguno ejecutándose:
 ```bash
 ps aux | grep monitor_
 ```
-
-
---------------------------------------------------------------------------------------------
-
-# API
-
-## Arquitectura del Sistema
-
-1.  **Servidor Web (Apache):** Es el punto de entrada público (Puerto 80). Recibe todas las peticiones de los clientes. Su trabajo es actuar como "recepcionista" y redirigir las peticiones a la aplicación web.
-
-2.  **Servidor de Aplicación (FastAPI):** Es el "cerebro" y el componente que genera la carga. Es una API de Python que se ejecuta en su propia máquina (Puerto 5000) y realiza una tarea de CPU intensiva cuando es llamada.
-
-3.  **Scripts de Monitoreo (Bash):** Un conjunto de scripts de `shell` que se ejecutan en el servidor de aplicación para registrar los "signos vitales" del sistema (CPU, memoria, latencia) durante las pruebas.
-
-El flujo de una petición de prueba es el siguiente:
-`Cliente` -> `IP del Servidor Apache:80` -> (Proxy) -> `IP del Servidor de Aplicación:5000`
-
----
-
-## Componentes
 
 ### 1. La Aplicación Web (API de FastAPI)
 
