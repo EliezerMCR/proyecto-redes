@@ -338,3 +338,61 @@ En una terminal, activa el entorno virtual y ejecuta la API de FastAPI. Es cruci
 source venv/bin/activate
 cd api
 uvicorn main:app --host 0.0.0.0 --port 5000
+# --workers 4 permite atender 4 peticiones simultáneas reales
+uvicorn main:app --host 0.0.0.0 --port 5000 --workers 4
+```
+
+## EJECUCIÓN DE ATAQUE (El "Showtime")
+
+Necesitarás 3 terminales (o ventanas de Tmux/Screen).
+
+Terminal 1: La Víctima (VM Ubuntu)
+Arranca el servidor y los monitores del sistema.
+```bash
+source ../venv/bin/activate
+
+# 1. Iniciar la API con 4 workers (para usar varios núcleos)
+cd api
+uvicorn main:app --host 0.0.0.0 --port 5000 --workers 4 &
+
+# 2. Volver a scripts y limpiar datos viejos
+cd ../scripts
+rm metrics/*.csv
+
+# 3. Iniciar todos los monitores (CPU, IO, Red, Latencia Local)
+./recolectar_todo.sh 
+"OR"
+./monitor_cpu.sh & 
+./monitor_io.sh & 
+./monitor_net.sh &
+./monitor_latency.sh &
+
+# Verifica que corren
+ps aux | grep monitor
+```
+
+Terminal 2: El Observador Externo (Tu PC Host o VM Cliente)
+Este script simula un cliente "inocente" que intenta usar el servicio mientras está bajo ataque. Nos dará la gráfica de latencia limpia.
+
+```bash
+# Asegúrate de apuntar a http://100.107.204.120/cpu
+python monitor_response_time.py
+```
+
+Terminal 3: El Atacante (Tu PC Host o VM Cliente)
+Una vez pasados los 30 segundos de baseline ¡fuego!
+
+```bash
+# Asegúrate de apuntar a http://100.107.204.120/cpu
+python load_test.py
+```
+
+Documentar:
+En Terminal 2 (Monitor): Verás que los tiempos de respuesta saltan de 0.05s a 2.0s o más. Verás "Timeouts" o errores 500/502. Toma captura de pantalla de esto.
+
+En Terminal 1 (Servidor): Si corres htop, verás los 4 procesos de uvicorn al 100% de CPU.
+
+Al finalizar:
+- Detén todo (Ctrl+C en monitores, pkill -f monitor).
+- Corre python graficar.py.
+- Revisa las gráficas en `graficos/`.
