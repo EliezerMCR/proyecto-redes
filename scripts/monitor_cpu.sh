@@ -1,44 +1,35 @@
 #!/bin/bash
 # monitor_cpu.sh
-# Registra CPU%, load average y memoria usada
+# Registra CPU, load y memoria
 
-# --- CONFIGURACIÓN ---
 mkdir -p metrics
 OUTFILE="metrics/cpu_metrics.csv"
-
 export LC_NUMERIC=C
 
-# --- MENSAJES DE INICIO ---
-echo "--> Guardando métricas de CPU en: $OUTFILE"
-echo "--> Intervalo de muestreo: ~5 segundos"
+echo "--> Guardando métricas CPU en: $OUTFILE"
 echo "Presiona Ctrl+C para detener."
 
-OUTFILE="metrics/cpu_metrics.csv"
-
-# --- ENCABEZADO CSV ---
-# cpu_user, cpu_system, cpu_iowait, load1, load5, load15, mem_used, mem_free
 echo "timestamp,cpu_user,cpu_system,cpu_iowait,load1,load5,load15,mem_used,mem_free" > "$OUTFILE"
 
-# Control de salida limpia
-trap "echo ' Deteniendo monitor CPU...'; exit" SIGINT SIGTERM
+trap "echo ' Deteniendo...'; exit" SIGINT SIGTERM
 
 while true; do
     timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-    # 1. CPU & IOWait
-    # mpstat 1 1 ejecuta durante 1 segundo para medir.
-    # Columnas típicas: %usr(3), %sys(5), %iowait(6)
-    cpu_stats=$(mpstat 1 1 | awk '/all/ {print $3","$5","$6}')
+    # 1. CPU: Usamos tail -1 para asegurar que tomamos la última línea (Average o el dato)
+    # y tr -d para borrar cualquier salto de línea basura.
+    cpu_stats=$(mpstat 1 1 | awk '/all/ {print $3","$5","$6}' | tail -n 1 | tr -d '\n')
 
     # 2. Load Average
-    loadavg=$(awk '{print $1","$2","$3}' /proc/loadavg)
+    loadavg=$(awk '{print $1","$2","$3}' /proc/loadavg | tr -d '\n')
 
-    # 3. Memoria (en MB)
-    mem=$(free -m | awk '/Mem:/ {print $3","$4}')
+    # 3. Memoria
+    mem=$(free -m | awk '/Mem:/ {print $3","$4}' | tr -d '\n')
 
-    # Guardar en CSV
-    echo "$timestamp,$cpu_stats,$loadavg,$mem" >> "$OUTFILE"
+    # Validación simple: si alguna variable está vacía, no escribimos la línea rota
+    if [[ -n "$cpu_stats" && -n "$loadavg" && -n "$mem" ]]; then
+        echo "$timestamp,$cpu_stats,$loadavg,$mem" >> "$OUTFILE"
+    fi
 
-    # Sincronización: mpstat tarda 1s + sleep 4s = 5s total
     sleep 4
 done
