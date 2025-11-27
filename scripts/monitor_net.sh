@@ -2,14 +2,14 @@
 # monitor_net.sh
 # Registra bytes recibidos (RX) y enviados (TX) acumulados.
 
-# --- Creación de directorio de métricas ---
-mkdir -p metrics
-
 # --- CONFIGURACIÓN ---
+mkdir -p metrics
 OUTFILE="metrics/net_metrics.csv"
 IFACE="enp0s3"
 
-# --- MONITOREO ---
+export LC_NUMERIC=C
+
+# --- MENSAJES DE INICIO ---
 echo "--> Monitoreando interfaz: $IFACE"
 echo "--> Guardando en: $OUTFILE"
 echo "Presiona Ctrl+C para detener todo."
