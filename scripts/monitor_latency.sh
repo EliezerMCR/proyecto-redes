@@ -2,6 +2,10 @@
 # monitor_latency.sh
 # Mide latencias hacia el endpoint de Flask
 
+# --- MONITOREO ---
+echo "--> Guardando en: $OUTFILE"
+echo "Presiona Ctrl+C para detener todo.
+
 OUTFILE="latency_metrics.csv"
 URL="http://localhost:5000/cpu"  # o la IP de tu servidor
 echo "timestamp,time_connect,time_starttransfer,time_total" > "$OUTFILE"
