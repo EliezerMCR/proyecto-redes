@@ -9,6 +9,7 @@ IFACE="enp0s3"
 # --- MONITOREO ---
 echo "--> Monitoreando interfaz: $IFACE"
 echo "--> Guardando en: $OUTFILE"
+echo "Presiona Ctrl+C para detener todo."
 
 # Crear cabecera CSV
 echo "timestamp,rx_bytes,tx_bytes" > "$OUTFILE"
