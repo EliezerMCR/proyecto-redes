@@ -22,12 +22,12 @@ def preparar_entorno():
         print(f"Directorio '{OUTPUT_DIR}' creado.")
     
     if not os.path.exists(INPUT_DIR):
-        print(f"⚠️ ADVERTENCIA: No existe el directorio '{INPUT_DIR}'. Asegúrate de ejecutar los scripts de monitoreo primero.")
+        print(f"ADVERTENCIA: No existe el directorio '{INPUT_DIR}'. Asegúrate de ejecutar los scripts de monitoreo primero.")
 
 def leer_csv(filepath):
     """Función auxiliar para leer CSV y configurar el índice de tiempo."""
     if not os.path.exists(filepath):
-        print(f"⚠️ Saltando {filepath}: Archivo no encontrado.")
+        print(f"Saltando {filepath}: Archivo no encontrado.")
         return None
     
     try:
@@ -44,7 +44,7 @@ def graficar_cpu():
     df = leer_csv(CPU_FILE)
     if df is None: return
 
-    print(f"📊 Graficando CPU desde {CPU_FILE}...")
+    print(f"Graficando CPU desde {CPU_FILE}...")
     
     fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(12, 12), sharex=True)
     
@@ -82,7 +82,7 @@ def graficar_latencia():
     df = leer_csv(LATENCY_FILE)
     if df is None: return
 
-    print(f"📊 Graficando Latencia desde {LATENCY_FILE}...")
+    print(f"Graficando Latencia desde {LATENCY_FILE}...")
     
     # Convertir a segundos (si vienen en formato texto)
     cols = ['time_total', 'time_starttransfer', 'time_connect']
@@ -108,7 +108,7 @@ def graficar_red():
     df = leer_csv(NET_FILE)
     if df is None: return
 
-    print(f"📊 Graficando Red desde {NET_FILE}...")
+    print(f"Graficando Red desde {NET_FILE}...")
     
     # EL CSV TIENE VALORES ACUMULADOS. NECESITAMOS LA VELOCIDAD.
     # 1. Calculamos la diferencia de bytes entre filas
@@ -150,7 +150,7 @@ def graficar_io():
     if df is None: 
         return
 
-    print(f"📊 Graficando Disco desde {IO_FILE}...")
+    print(f"Graficando Disco desde {IO_FILE}...")
     
     # Intentar detectar columnas comunes de iostat
     # Si usaste un script personalizado, ajusta estos nombres
@@ -175,7 +175,7 @@ def graficar_io():
         ax.legend()
         ax.grid(True, alpha=0.3)
     else:
-        print("⚠️ No se detectaron columnas obvias de lectura/escritura en io_metrics.csv")
+        print("No se detectaron columnas obvias de lectura/escritura en io_metrics.csv")
         # Graficamos todo lo que haya si no sabemos qué es
         df.plot(ax=ax)
     
@@ -192,4 +192,4 @@ if __name__ == "__main__":
     graficar_red()
     graficar_io()
     
-    print(f"\n✅ ¡Proceso completado! Revisa la carpeta '{OUTPUT_DIR}'")
+    print(f"\n¡Proceso completado! Revisa la carpeta '{OUTPUT_DIR}'")
