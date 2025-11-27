@@ -1,0 +1,11 @@
+# Dependencias para la API de FastAPI
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# Dependencias para graficación
+pandas>=2.1.0
+matplotlib>=3.8.0
+
+# Dependencias para pruebas de carga y monitoreo
+aiohttp>=3.9.0
+requests>=2.31.0

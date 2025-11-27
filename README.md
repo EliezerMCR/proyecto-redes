@@ -2,8 +2,10 @@
 
 # 📊 Scripts de Monitoreo – Proyecto Redes de Computadoras I
 
-Este conjunto de **scripts en Bash** automatiza la **recolección de métricas de rendimiento del servidor** durante pruebas de carga.
+Este conjunto de **scripts en Bash y Python** automatiza la **recolección de métricas de rendimiento del servidor** durante pruebas de carga.
 Los scripts permiten registrar datos del sistema operativo (CPU, I/O, red, memoria y latencia) en archivos CSV para su posterior análisis y graficación.
+
+Además, incluye **scripts de prueba de carga en Python** para simular múltiples usuarios concurrentes y medir la degradación del servicio bajo carga.
 
 ## 📈 Graficación de métricas (Python)
 
@@ -37,14 +39,23 @@ Con el entorno virtual activado:
 ## ⚙️ Estructura del proyecto
 
 ```
+api/
+├── main.py                      # API FastAPI con endpoint /cpu
+
 scripts/
-│
-├── utils.sh              # Configuración y funciones comunes
-├── monitor_cpu.sh        # Registra uso de CPU, memoria y carga promedio
-├── monitor_io.sh         # Registra métricas de E/S de disco
-├── monitor_net.sh        # Registra tráfico de red (bytes RX/TX)
-├── monitor_latency.sh    # Registra latencias HTTP hacia un endpoint
-└── recolectar_todo.sh    # Lanza y controla todos los monitores a la vez
+├── load_test.py                 # Prueba de carga con usuarios concurrentes
+├── monitor_response_time.py     # Monitoreo continuo de tiempos de respuesta
+├── utils.sh                     # Configuración y funciones comunes
+├── monitor_cpu.sh               # Registra uso de CPU, memoria y carga promedio
+├── monitor_io.sh                # Registra métricas de E/S de disco
+├── monitor_net.sh               # Registra tráfico de red (bytes RX/TX)
+├── monitor_latency.sh           # Registra latencias HTTP hacia un endpoint
+└── recolectar_todo.sh           # Lanza y controla todos los monitores a la vez
+
+graficos/
+└── graficar.py                  # Genera gráficos desde CSVs
+
+requirements.txt                 # Dependencias de Python
 ```
 
 ---
@@ -118,6 +129,49 @@ Mide **tiempos de conexión, inicio de transferencia y total** hacia una URL def
 Genera: `latency_metrics.csv`
 
 Para detener: `Ctrl + C`
+
+---
+
+### 5. `load_test.py`
+
+Script de **prueba de carga** que simula múltiples usuarios concurrentes atacando el endpoint `/cpu`.
+
+```bash
+cd scripts
+source ../venv/bin/activate
+python load_test.py
+```
+
+Genera: `load_test_results.csv`
+
+**Configuración** (edita las variables al inicio del script):
+- `USUARIOS_CONCURRENTES = 50`
+- `TOTAL_REQUESTS = 500`
+- `ITERACIONES = 5000000`
+
+**Salida:** Estadísticas completas (throughput, tiempos mín/máx/media, percentiles P90/P95/P99)
+
+---
+
+### 6. `monitor_response_time.py`
+
+**Monitoreo continuo** de tiempos de respuesta del endpoint. Hace requests periódicos y registra métricas detalladas.
+
+```bash
+cd scripts
+source ../venv/bin/activate
+python monitor_response_time.py
+```
+
+Genera: `response_time_metrics.csv` (con timestamps, tiempos de respuesta, latencia de red)
+
+**Configuración:**
+- `INTERVALO_SEGUNDOS = 5`
+- `ITERACIONES = 1000000`
+
+Para detener: `Ctrl + C`
+
+**Uso recomendado:** Ejecutar ANTES de lanzar `load_test.py` para capturar la degradación completa (baseline → carga → recuperación)
 
 
 ---
@@ -221,11 +275,16 @@ Estos scripts (`.sh`) cumplen con las Tareas 2 y 3, recolectando datos en format
     ```
 
 3.  **Dependencias de Python:**
-    Con el entorno activado, instala FastAPI y Uvicorn.
+    Con el entorno activado, instala todas las dependencias desde `requirements.txt`.
 
     ```bash
-    (venv) $ pip install fastapi uvicorn
+    (venv) $ pip install -r requirements.txt
     ```
+
+    Esto instalará:
+    - `fastapi`, `uvicorn` - Para la API
+    - `pandas`, `matplotlib` - Para graficación
+    - `aiohttp`, `requests` - Para pruebas de carga
 
 4.  **Archivo `.gitignore`:**
     Asegúrate de que tu `.gitignore` incluya la carpeta `venv/` y los archivos de datos generados:
@@ -243,7 +302,32 @@ Estos scripts (`.sh`) cumplen con las Tareas 2 y 3, recolectando datos en format
 
 ---
 
-## Flujo de Trabajo para una Prueba
+## 🎯 Flujo de Trabajo Recomendado para Capturar Degradación
+
+Para capturar la **degradación completa del servidor** (antes, durante y después de la carga):
+
+**Terminal 1: Monitoreo de tiempos de respuesta**
+```bash
+cd scripts
+source ../venv/bin/activate
+python monitor_response_time.py
+```
+
+**Terminal 2: Generar carga (espera ~30 segundos después de iniciar el monitoreo)**
+```bash
+cd scripts
+source ../venv/bin/activate
+python load_test.py
+```
+
+El archivo `response_time_metrics.csv` contendrá:
+1. **Baseline**: Tiempos normales (primeros ~30 segundos)
+2. **Degradación**: Durante la sobrecarga
+3. **Recuperación**: Cuando el servidor vuelve a la normalidad
+
+---
+
+## Flujo de Trabajo para una Prueba Completa
 
 Este es el proceso para ejecutar un experimento completo y "sobresaturar al sistema" (Tarea 4).
 
@@ -252,4 +336,5 @@ En una terminal, activa el entorno virtual y ejecuta la API de FastAPI. Es cruci
 
 ```bash
 source venv/bin/activate
-(venv) $ uvicorn main:app --host 0.0.0.0 --port 5000
+cd api
+uvicorn main:app --host 0.0.0.0 --port 5000
