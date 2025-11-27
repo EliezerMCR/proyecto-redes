@@ -2,6 +2,10 @@
 # monitor_cpu.sh
 # Registra CPU%, load average y memoria usada
 
+# --- MONITOREO ---
+echo "--> Guardando en: $OUTFILE"
+echo "Presiona Ctrl+C para detener todo.
+
 OUTFILE="cpu_metrics.csv"
 
 # Encabezado
