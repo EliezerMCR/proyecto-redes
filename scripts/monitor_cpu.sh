@@ -2,11 +2,14 @@
 # monitor_cpu.sh
 # Registra CPU%, load average y memoria usada
 
+# --- Creación de directorio de métricas ---
+mkdir -p metrics
+
 # --- MONITOREO ---
 echo "--> Guardando en: $OUTFILE"
 echo "Presiona Ctrl+C para detener todo.
 
-OUTFILE="cpu_metrics.csv"
+OUTFILE="metrics/cpu_metrics.csv"
 
 # Encabezado
 echo "timestamp,cpu_user,cpu_system,cpu_iowait,load1,load5,load15,mem_used,mem_free" > "$OUTFILE"

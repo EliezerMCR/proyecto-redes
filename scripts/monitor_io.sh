@@ -1,12 +1,15 @@
 #!/bin/bash
 # monitor_io.sh
 # Registra métricas de I/O por dispositivo
-# --- MONITOREO ---
 
+# --- Creación de directorio de métricas ---
+mkdir -p metrics
+
+# --- MONITOREO ---
 echo "--> Guardando en: $OUTFILE"
 echo "Presiona Ctrl+C para detener todo.
 
-OUTFILE="io_metrics.csv"
+OUTFILE="metrics/io_metrics.csv"
 echo "timestamp,device,read_s,write_s,utilization" > "$OUTFILE"
 
 while true; do

@@ -1,5 +1,5 @@
 #!/bin/bash
-# recolectar_todo.sh - versión mejorada
+# recolectar_todo.sh
 mkdir -p metrics
 
 # Iniciar monitores en background y guardar sus PIDs

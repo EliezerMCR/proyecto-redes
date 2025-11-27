@@ -2,8 +2,11 @@
 # monitor_net.sh
 # Registra bytes recibidos (RX) y enviados (TX) acumulados.
 
+# --- Creación de directorio de métricas ---
+mkdir -p metrics
+
 # --- CONFIGURACIÓN ---
-OUTFILE="net_metrics.csv"
+OUTFILE="metrics/net_metrics.csv"
 IFACE="enp0s3"
 
 # --- MONITOREO ---
