@@ -26,6 +26,7 @@ def procesar_carga(iteraciones: int = 1000000):
     - CPU: O(N) lineal con iteraciones
     - RAM: O(N) lineal con iteraciones (~200 bytes por iteración)
 
+    """
 
     start_time = time.time()
 
