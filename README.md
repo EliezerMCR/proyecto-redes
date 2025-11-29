@@ -1,13 +1,13 @@
 # proyecto-redes
 
-# 📊 Scripts de Monitoreo – Proyecto Redes de Computadoras I
+# Scripts de Monitoreo - Proyecto Redes de Computadoras I
 
 Este conjunto de **scripts en Bash y Python** automatiza la **recolección de métricas de rendimiento del servidor** durante pruebas de carga.
 Los scripts permiten registrar datos del sistema operativo (CPU, I/O, red, memoria y latencia) en archivos CSV para su posterior análisis y graficación.
 
 Además, incluye **scripts de prueba de carga en Python** para simular múltiples usuarios concurrentes y medir la degradación del servicio bajo carga.
 
-## 📈 Graficación de métricas (Python)
+## Graficacion de metricas (Python)
 
 El script `graficos/graficar.py` genera gráficos a partir de los `.csv` producidos por los scripts de monitoreo.
 
@@ -36,7 +36,7 @@ Con el entorno virtual activado:
 ```
 ---
 
-## ⚙️ Estructura del proyecto
+## Estructura del proyecto
 
 ```
 api/
@@ -176,7 +176,7 @@ Para detener: `Ctrl + C`
 
 ---
 
-## 🚀 Monitoreo completo
+## Monitoreo completo
 
 Para ejecutar todos los scripts en paralelo:
 
@@ -200,7 +200,7 @@ Deteniendo monitores...
 
 ---
 
-## 🧹 Cómo detener manualmente todos los monitores
+## Como detener manualmente todos los monitores
 
 En caso de que algún proceso quede activo tras una interrupción:
 ```bash
@@ -302,7 +302,7 @@ Estos scripts (`.sh`) cumplen con las Tareas 2 y 3, recolectando datos en format
 
 ---
 
-## 🎯 Flujo de Trabajo Recomendado para Capturar Degradación
+## Flujo de Trabajo Recomendado para Capturar Degradacion
 
 Para capturar la **degradación completa del servidor** (antes, durante y después de la carga):
 

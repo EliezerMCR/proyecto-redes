@@ -24,13 +24,13 @@ def procesar_carga(iteraciones: int = 1000000):
 
     Complejidad:
     - CPU: O(N) lineal con iteraciones
-    - RAM: O(N) lineal con iteraciones (~400 bytes por iteración)
+    - RAM: O(N) lineal con iteraciones (~200 bytes por iteración)
 
     Consumo aproximado:
-    - 100,000 iteraciones → ~40 MB RAM
-    - 500,000 iteraciones → ~200 MB RAM
-    - 1,000,000 iteraciones → ~400 MB RAM
-    - 5,000,000 iteraciones → ~2 GB RAM
+    - 100,000 iteraciones → ~20 MB RAM
+    - 500,000 iteraciones → ~100 MB RAM
+    - 1,000,000 iteraciones → ~200 MB RAM
+    - 5,000,000 iteraciones → ~1 GB RAM
     """
 
     start_time = time.time()
@@ -44,20 +44,14 @@ def procesar_carga(iteraciones: int = 1000000):
         valor = math.sqrt(i) * math.sin(i)
         resultado += valor
 
-        # Consumo de RAM lineal: almacenar múltiples copias del resultado
-        # para incrementar el consumo de memoria de forma significativa
-        # Cada diccionario consume ~400 bytes aproximadamente
+        # Consumo de RAM lineal: almacenar resultados
+        # Cada diccionario consume ~200 bytes aproximadamente
         datos = {
             'iteracion': i,
             'valor': valor,
             'sqrt': math.sqrt(i),
             'sin': math.sin(i),
-            'cos': math.cos(i),
-            'tan': math.tan(i) if math.cos(i) != 0 else 0,
-            'resultado_acumulado': resultado,
-            'duplicado_1': valor,
-            'duplicado_2': valor,
-            'duplicado_3': valor
+            'resultado_acumulado': resultado
         }
         resultados_memoria.append(datos)
 
@@ -65,8 +59,8 @@ def procesar_carga(iteraciones: int = 1000000):
     execution_time = (end_time - start_time)
 
     # Calcular memoria utilizada
-    # Cada dict con 10 elementos: ~400 bytes aproximadamente
-    memoria_bytes = len(resultados_memoria) * 400
+    # Cada dict con 5 elementos: ~200 bytes aproximadamente
+    memoria_bytes = len(resultados_memoria) * 200
     memoria_mb = memoria_bytes / (1024 * 1024)
 
     # Devuelve una respuesta JSON

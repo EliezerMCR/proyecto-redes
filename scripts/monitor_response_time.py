@@ -25,7 +25,7 @@ csv_file = None
 def signal_handler(sig, frame):
     """Maneja Ctrl+C para detener limpiamente"""
     global running, csv_file
-    print("\n\n⚠️  Deteniendo monitoreo...")
+    print("\n\nDeteniendo monitoreo...")
     running = False
     if csv_file:
         csv_file.close()
@@ -86,7 +86,7 @@ def main():
     signal.signal(signal.SIGTERM, signal_handler)
 
     print(f"\n{'='*70}")
-    print(f"📊 MONITOREO DE TIEMPOS DE RESPUESTA")
+    print(f"MONITOREO DE TIEMPOS DE RESPUESTA")
     print(f"{'='*70}")
     print(f"URL: {SERVER_URL}")
     print(f"Intervalo: {INTERVALO_SEGUNDOS}s")
@@ -120,7 +120,7 @@ def main():
             success_count += 1
 
         # Mostrar en consola
-        icon = "✅" if result['success'] else "❌"
+        icon = "OK" if result['success'] else "ERROR"
         print(f"{result['timestamp']:<27} "
               f"{str(result['status']):<8} "
               f"{result['response_time']:>10.3f}s "
@@ -130,7 +130,7 @@ def main():
         # Estadísticas cada 10 requests
         if request_count % 10 == 0:
             success_rate = (success_count / request_count) * 100
-            print(f"\n📈 {request_count} requests | {success_rate:.1f}% éxito\n")
+            print(f"\n{request_count} requests | {success_rate:.1f}% exito\n")
 
         time.sleep(INTERVALO_SEGUNDOS)
 
@@ -138,5 +138,5 @@ def main():
 
 
 if __name__ == '__main__':
-    print("\n💡 Tip: Puedes editar INTERVALO_SEGUNDOS e ITERACIONES en el script\n")
+    print("\nTip: Puedes editar INTERVALO_SEGUNDOS e ITERACIONES en el script\n")
     main()

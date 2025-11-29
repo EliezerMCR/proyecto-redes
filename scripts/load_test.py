@@ -13,13 +13,15 @@ import csv
 
 # Configuración
 SERVER_URL = "http://100.107.204.120/cpu"
+OUTPUT_FILE = "load_test_results.csv"
+
 # Aumentamos para saturar los 4 workers sugeridos
-USUARIOS_CONCURRENTES = 50  
+USUARIOS_CONCURRENTES = 5000
 
 # Queremos que dure. Si cada request tarda 0.5s...
 # 5000 requests / 50 users = 100 rondas. 100 * 0.5s = ~50 segundos.
 # Pongamos 20,000 para asegurar unos 3-4 minutos de castigo.
-TOTAL_REQUESTS = 20000 
+TOTAL_REQUESTS = 200000
 
 # Mantenemos esto alto para forzar CPU
 ITERACIONES = 500000
@@ -67,7 +69,7 @@ async def simular_usuario(user_id, requests_por_usuario):
 async def ejecutar_prueba():
     """Ejecuta la prueba de carga"""
     print(f"\n{'='*60}")
-    print(f"🚀 SOBRECARGANDO SERVIDOR")
+    print(f"SOBRECARGANDO SERVIDOR")
     print(f"{'='*60}")
     print(f"URL: {SERVER_URL}")
     print(f"Usuarios: {USUARIOS_CONCURRENTES}")
@@ -81,7 +83,7 @@ async def ejecutar_prueba():
     requests_por_usuario = TOTAL_REQUESTS // USUARIOS_CONCURRENTES
 
     # Ejecutar todos los usuarios en paralelo
-    print("⏳ Ejecutando requests concurrentes...")
+    print("Ejecutando requests concurrentes...")
     tasks = [simular_usuario(i, requests_por_usuario) for i in range(USUARIOS_CONCURRENTES)]
     resultados_por_usuario = await asyncio.gather(*tasks)
 
@@ -103,18 +105,18 @@ async def ejecutar_prueba():
     fallidos = [r for r in resultados if not r['success']]
 
     print(f"\n{'='*60}")
-    print(f"📊 RESULTADOS")
+    print(f"RESULTADOS")
     print(f"{'='*60}")
-    print(f"⏱️  Tiempo total: {total_time:.2f}s")
-    print(f"📈 Throughput: {len(resultados)/total_time:.2f} req/s")
-    print(f"✅ Exitosos: {len(exitosos)} ({len(exitosos)/len(resultados)*100:.1f}%)")
-    print(f"❌ Fallidos: {len(fallidos)} ({len(fallidos)/len(resultados)*100:.1f}%)")
+    print(f"Tiempo total: {total_time:.2f}s")
+    print(f"Throughput: {len(resultados)/total_time:.2f} req/s")
+    print(f"Exitosos: {len(exitosos)} ({len(exitosos)/len(resultados)*100:.1f}%)")
+    print(f"Fallidos: {len(fallidos)} ({len(fallidos)/len(resultados)*100:.1f}%)")
 
     if exitosos:
         tiempos = [r['response_time'] for r in exitosos]
         tiempos_sorted = sorted(tiempos)
 
-        print(f"\n⏱️  TIEMPOS DE RESPUESTA:")
+        print(f"\nTIEMPOS DE RESPUESTA:")
         print(f"   Mínimo: {min(tiempos):.3f}s")
         print(f"   Máximo: {max(tiempos):.3f}s")
         print(f"   Media: {mean(tiempos):.3f}s")
@@ -123,14 +125,14 @@ async def ejecutar_prueba():
         print(f"   P95: {tiempos_sorted[int(len(tiempos)*0.95)]:.3f}s")
         print(f"   P99: {tiempos_sorted[int(len(tiempos)*0.99)]:.3f}s")
 
-    print(f"\n💾 Resultados guardados en: {OUTPUT_FILE}")
+    print(f"\nResultados guardados en: {OUTPUT_FILE}")
     print(f"{'='*60}\n")
 
 
 if __name__ == '__main__':
-    print("\n💡 Tip: Puedes editar USUARIOS_CONCURRENTES, TOTAL_REQUESTS e ITERACIONES en el script\n")
+    print("\nTip: Puedes editar USUARIOS_CONCURRENTES, TOTAL_REQUESTS e ITERACIONES en el script\n")
 
     try:
         asyncio.run(ejecutar_prueba())
     except KeyboardInterrupt:
-        print("\n\n⚠️  Prueba interrumpida\n")
+        print("\n\nPrueba interrumpida\n")

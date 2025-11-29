@@ -37,7 +37,7 @@ def leer_csv(filepath):
         df.set_index('timestamp', inplace=True)
         return df
     except Exception as e:
-        print(f"❌ Error leyendo {filepath}: {e}")
+        print(f"Error leyendo {filepath}: {e}")
         return None
 
 def graficar_cpu():
