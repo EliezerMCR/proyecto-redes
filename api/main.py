@@ -30,7 +30,7 @@ def procesar_carga(iteraciones: int = 1000000):
     start_time = time.time()
 
     # Lista para almacenar resultados (consumo de RAM proporcional)
-    # resultados_memoria = []
+    resultados_memoria = []
     resultado = 0
 
     for i in range(iteraciones):

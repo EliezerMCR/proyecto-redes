@@ -16,15 +16,15 @@ SERVER_URL = "http://100.107.204.120/cpu"
 OUTPUT_FILE = "load_test_results.csv"
 
 # Aumentamos para saturar los 4 workers sugeridos
-USUARIOS_CONCURRENTES = 500
+USUARIOS_CONCURRENTES = 6
 
 # Queremos que dure. Si cada request tarda 0.5s...
 # 5000 requests / 50 users = 100 rondas. 100 * 0.5s = ~50 segundos.
 # Pongamos 20,000 para asegurar unos 3-4 minutos de castigo.
-TOTAL_REQUESTS = 200000
+TOTAL_REQUESTS = 5000
 
 # Mantenemos esto alto para forzar CPU
-ITERACIONES = 10000000
+ITERACIONES = 1000000000
 
 
 async def hacer_request(session, user_id, request_num):
