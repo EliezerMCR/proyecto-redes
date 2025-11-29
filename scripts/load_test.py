@@ -16,7 +16,7 @@ SERVER_URL = "http://100.107.204.120/cpu"
 OUTPUT_FILE = "load_test_results.csv"
 
 # Aumentamos para saturar los 4 workers sugeridos
-USUARIOS_CONCURRENTES = 50
+USUARIOS_CONCURRENTES = 500
 
 # Queremos que dure. Si cada request tarda 0.5s...
 # 5000 requests / 50 users = 100 rondas. 100 * 0.5s = ~50 segundos.
@@ -24,7 +24,7 @@ USUARIOS_CONCURRENTES = 50
 TOTAL_REQUESTS = 200000
 
 # Mantenemos esto alto para forzar CPU
-ITERACIONES = 500000
+ITERACIONES = 10000000
 
 
 async def hacer_request(session, user_id, request_num):
@@ -33,7 +33,7 @@ async def hacer_request(session, user_id, request_num):
 
     try:
         params = {'iteraciones': ITERACIONES}
-        async with session.get(SERVER_URL, params=params, timeout=aiohttp.ClientTimeout(total=60)) as response:
+        async with session.get(SERVER_URL, params=params, timeout=aiohttp.ClientTimeout(total=310)) as response:
             data = await response.json()
             elapsed = time.time() - start
 

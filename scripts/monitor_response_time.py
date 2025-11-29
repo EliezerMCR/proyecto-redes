@@ -38,7 +38,7 @@ def hacer_request():
 
     try:
         params = {'iteraciones': ITERACIONES}
-        response = requests.get(SERVER_URL, params=params, timeout=60)
+        response = requests.get(SERVER_URL, params=params, timeout=310)
         elapsed = time.time() - start
 
         if response.status_code == 200:

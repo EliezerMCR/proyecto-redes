@@ -35,7 +35,7 @@ while true; do
     
     metrics=$(curl -o /dev/null -s -w "%{time_connect},%{time_starttransfer},%{time_total},%{http_code}" "$TARGET_URL")
 
-    # Si curl falla (ej. timeout), metrics estará vacío o incorrecto.
+    # Si curl falla, metrics estará vacío o incorrecto.
     # Validamos simple:
     if [ -n "$metrics" ]; then
         echo "$timestamp,$metrics" >> "$OUTFILE"
