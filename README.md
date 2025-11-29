@@ -45,7 +45,6 @@ api/
 scripts/
 ├── load_test.py                 # Prueba de carga con usuarios concurrentes
 ├── monitor_response_time.py     # Monitoreo continuo de tiempos de respuesta
-├── utils.sh                     # Configuración y funciones comunes
 ├── monitor_cpu.sh               # Registra uso de CPU, memoria y carga promedio
 ├── monitor_io.sh                # Registra métricas de E/S de disco
 ├── monitor_net.sh               # Registra tráfico de red (bytes RX/TX)
