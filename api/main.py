@@ -26,12 +26,6 @@ def procesar_carga(iteraciones: int = 1000000):
     - CPU: O(N) lineal con iteraciones
     - RAM: O(N) lineal con iteraciones (~200 bytes por iteración)
 
-    Consumo aproximado:
-    - 100,000 iteraciones → ~20 MB RAM
-    - 500,000 iteraciones → ~100 MB RAM
-    - 1,000,000 iteraciones → ~200 MB RAM
-    - 5,000,000 iteraciones → ~1 GB RAM
-    """
 
     start_time = time.time()
 
