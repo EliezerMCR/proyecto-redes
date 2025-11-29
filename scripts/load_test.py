@@ -33,7 +33,7 @@ async def hacer_request(session, user_id, request_num):
 
     try:
         params = {'iteraciones': ITERACIONES}
-        async with session.get(SERVER_URL, params=params, timeout=aiohttp.ClientTimeout(total=210)) as response:
+        async with session.get(SERVER_URL, params=params, timeout=aiohttp.ClientTimeout(total=300)) as response:
             data = await response.json()
             elapsed = time.time() - start
 
