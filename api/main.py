@@ -38,9 +38,9 @@ def procesar_carga(iteraciones: int = 1000000):
         valor = math.sqrt(i) * math.sin(i)
         resultado += valor
 
-        # Consumo de RAM reducido: almacenar solo 1 de cada 500 valores
+        # Consumo de RAM reducido: almacenar solo 1 de cada 50 valores
         # Cada float consume ~28 bytes aproximadamente
-        if i % 10 == 0:
+        if i % 50 == 0:
             resultados_memoria.append(valor)
 
     end_time = time.time()
