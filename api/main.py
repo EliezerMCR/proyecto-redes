@@ -24,7 +24,7 @@ def procesar_carga(iteraciones: int = 1000000):
 
     Complejidad:
     - CPU: O(N) lineal con iteraciones
-    - RAM: O(N) lineal con iteraciones
+    - RAM: O(N/1000) - almacena solo 1 de cada 1000 iteraciones
     """
 
     start_time = time.time()
@@ -38,25 +38,26 @@ def procesar_carga(iteraciones: int = 1000000):
         valor = math.sqrt(i) * math.sin(i)
         resultado += valor
 
-        # # Consumo de RAM lineal: almacenar solo el valor calculado
-        # # Cada float consume ~28 bytes aproximadamente
-        # resultados_memoria.append(valor)
+        # Consumo de RAM reducido: almacenar solo 1 de cada 1000 valores
+        # Cada float consume ~28 bytes aproximadamente
+        if i % 1000 == 0:
+            resultados_memoria.append(valor)
 
     end_time = time.time()
     execution_time = (end_time - start_time)
 
-    # # Calcular memoria utilizada
-    # # Cada float: ~28 bytes aproximadamente
-    # memoria_bytes = len(resultados_memoria) * 28
-    # memoria_mb = memoria_bytes / (1024 * 1024)
+    # Calcular memoria utilizada (solo guardamos 1 de cada 1000)
+    # Cada float: ~28 bytes aproximadamente
+    memoria_bytes = len(resultados_memoria) * 28
+    memoria_kb = memoria_bytes / 1024
 
     # Devuelve una respuesta JSON
     response = {
         "mensaje": "Carga procesada con FastAPI.",
         "iteraciones_realizadas": iteraciones,
         "tiempo_ejecucion_seg": execution_time,
-        # "elementos_en_memoria": len(resultados_memoria),
-        # "memoria_consumida_mb": round(memoria_mb, 2)
+        "elementos_en_memoria": len(resultados_memoria),
+        "memoria_consumida_kb": round(memoria_kb, 2)
     }
 
     # # Limpiar memoria explícitamente antes de retornar
