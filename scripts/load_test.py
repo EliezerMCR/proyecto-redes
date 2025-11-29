@@ -24,7 +24,7 @@ USUARIOS_CONCURRENTES = 500
 TOTAL_REQUESTS = 5000
 
 # Mantenemos esto alto para forzar CPU
-ITERACIONES = 1000000
+ITERACIONES = 10000000
 
 
 async def hacer_request(session, user_id, request_num):
