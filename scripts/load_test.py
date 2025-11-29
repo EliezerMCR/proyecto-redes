@@ -21,7 +21,7 @@ USUARIOS_CONCURRENTES = 500
 # Queremos que dure. Si cada request tarda 0.5s...
 # 5000 requests / 50 users = 100 rondas. 100 * 0.5s = ~50 segundos.
 # Pongamos 20,000 para asegurar unos 3-4 minutos de castigo.
-TOTAL_REQUESTS = 5000
+TOTAL_REQUESTS = 8000
 
 # Mantenemos esto alto para forzar CPU
 ITERACIONES = 10000000

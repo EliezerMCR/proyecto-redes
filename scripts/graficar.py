@@ -15,6 +15,10 @@ LATENCY_FILE = os.path.join(INPUT_DIR, "latency_metrics.csv")
 NET_FILE = os.path.join(INPUT_DIR, "net_metrics.csv")
 IO_FILE = os.path.join(INPUT_DIR, "io_metrics.csv")
 
+# Archivos de pruebas de carga y monitoreo
+LOAD_TEST_FILE = "load_test_results.csv"
+RESPONSE_TIME_FILE = "response_time_metrics.csv"
+
 def preparar_entorno():
     """Crea los directorios necesarios."""
     if not os.path.exists(OUTPUT_DIR):
@@ -183,13 +187,154 @@ def graficar_io():
     plt.savefig(os.path.join(OUTPUT_DIR, "4_metrics_disco.png"))
     plt.close()
 
+def graficar_load_test():
+    """Grafica los resultados de la prueba de carga (load_test_results.csv)"""
+    if not os.path.exists(LOAD_TEST_FILE):
+        print(f"Saltando {LOAD_TEST_FILE}: Archivo no encontrado.")
+        return
+
+    print(f"Graficando Load Test desde {LOAD_TEST_FILE}...")
+
+    try:
+        df = pd.read_csv(LOAD_TEST_FILE)
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df = df.sort_values('timestamp')
+    except Exception as e:
+        print(f"Error leyendo {LOAD_TEST_FILE}: {e}")
+        return
+
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+
+    # 1. Tiempos de respuesta a lo largo del tiempo
+    ax1 = axes[0, 0]
+    df_success = df[df['success'] == True]
+    if not df_success.empty:
+        ax1.scatter(df_success['timestamp'], df_success['response_time'],
+                   alpha=0.3, s=10, c='blue', label='Response Time')
+        # Media móvil
+        df_success_sorted = df_success.sort_values('timestamp').copy()
+        df_success_sorted['rolling_mean'] = df_success_sorted['response_time'].rolling(window=50, min_periods=1).mean()
+        ax1.plot(df_success_sorted['timestamp'], df_success_sorted['rolling_mean'],
+                color='red', linewidth=2, label='Media móvil (50)')
+    ax1.set_title('Tiempos de Respuesta durante Load Test')
+    ax1.set_ylabel('Tiempo (s)')
+    ax1.set_xlabel('Tiempo')
+    ax1.legend()
+    ax1.grid(True, alpha=0.3)
+    ax1.tick_params(axis='x', rotation=45)
+
+    # 2. Distribución de tiempos de respuesta (histograma)
+    ax2 = axes[0, 1]
+    if not df_success.empty:
+        ax2.hist(df_success['response_time'], bins=50, color='steelblue', edgecolor='black', alpha=0.7)
+        ax2.axvline(df_success['response_time'].mean(), color='red', linestyle='--', label=f"Media: {df_success['response_time'].mean():.2f}s")
+        ax2.axvline(df_success['response_time'].median(), color='green', linestyle='--', label=f"Mediana: {df_success['response_time'].median():.2f}s")
+    ax2.set_title('Distribución de Tiempos de Respuesta')
+    ax2.set_xlabel('Tiempo (s)')
+    ax2.set_ylabel('Frecuencia')
+    ax2.legend()
+    ax2.grid(True, alpha=0.3)
+
+    # 3. Throughput (requests por segundo)
+    ax3 = axes[1, 0]
+    df['timestamp_rounded'] = df['timestamp'].dt.floor('1s')
+    throughput = df.groupby('timestamp_rounded').size()
+    ax3.plot(throughput.index, throughput.values, color='purple', linewidth=1)
+    ax3.fill_between(throughput.index, throughput.values, alpha=0.3, color='purple')
+    ax3.set_title('Throughput (Requests/segundo)')
+    ax3.set_ylabel('Requests/s')
+    ax3.set_xlabel('Tiempo')
+    ax3.grid(True, alpha=0.3)
+    ax3.tick_params(axis='x', rotation=45)
+
+    # 4. Tasa de éxito/error
+    ax4 = axes[1, 1]
+    success_count = df['success'].sum()
+    error_count = len(df) - success_count
+    colors = ['#2ecc71', '#e74c3c']
+    ax4.pie([success_count, error_count], labels=['Exitosos', 'Fallidos'],
+           autopct='%1.1f%%', colors=colors, startangle=90)
+    ax4.set_title(f'Tasa de Éxito ({len(df)} requests totales)')
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(OUTPUT_DIR, "5_load_test_results.png"))
+    plt.close()
+
+    # Imprimir estadísticas
+    print(f"   Total requests: {len(df)}")
+    print(f"   Exitosos: {success_count} ({success_count/len(df)*100:.1f}%)")
+    print(f"   Fallidos: {error_count} ({error_count/len(df)*100:.1f}%)")
+    if not df_success.empty:
+        print(f"   Tiempo respuesta promedio: {df_success['response_time'].mean():.3f}s")
+
+def graficar_response_time():
+    """Grafica las métricas de tiempo de respuesta (response_time_metrics.csv)"""
+    if not os.path.exists(RESPONSE_TIME_FILE):
+        print(f"Saltando {RESPONSE_TIME_FILE}: Archivo no encontrado.")
+        return
+
+    print(f"Graficando Response Time desde {RESPONSE_TIME_FILE}...")
+
+    try:
+        df = pd.read_csv(RESPONSE_TIME_FILE)
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df = df.sort_values('timestamp')
+    except Exception as e:
+        print(f"Error leyendo {RESPONSE_TIME_FILE}: {e}")
+        return
+
+    df_success = df[df['success'] == True]
+
+    fig, axes = plt.subplots(2, 1, figsize=(14, 10), sharex=True)
+
+    # 1. Desglose de tiempos (response, server, network)
+    ax1 = axes[0]
+    if not df_success.empty:
+        ax1.plot(df_success['timestamp'], df_success['response_time'],
+                label='Response Time (Total)', color='blue', linewidth=1.5, marker='o', markersize=3)
+        ax1.plot(df_success['timestamp'], df_success['server_time'],
+                label='Server Time', color='orange', linewidth=1.5, marker='s', markersize=3)
+        ax1.plot(df_success['timestamp'], df_success['network_latency'],
+                label='Network Latency', color='green', linewidth=1.5, marker='^', markersize=3)
+    ax1.set_title('Desglose de Tiempos de Respuesta')
+    ax1.set_ylabel('Tiempo (s)')
+    ax1.legend()
+    ax1.grid(True, alpha=0.3)
+
+    # 2. Área apilada para visualizar proporción
+    ax2 = axes[1]
+    if not df_success.empty:
+        ax2.fill_between(df_success['timestamp'], 0, df_success['server_time'],
+                        label='Server Time', alpha=0.7, color='orange')
+        ax2.fill_between(df_success['timestamp'], df_success['server_time'],
+                        df_success['server_time'] + df_success['network_latency'],
+                        label='Network Latency', alpha=0.7, color='green')
+    ax2.set_title('Composición del Tiempo de Respuesta')
+    ax2.set_ylabel('Tiempo (s)')
+    ax2.set_xlabel('Tiempo')
+    ax2.legend()
+    ax2.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(OUTPUT_DIR, "6_response_time_metrics.png"))
+    plt.close()
+
+    # Imprimir estadísticas
+    if not df_success.empty:
+        print(f"   Total muestras: {len(df_success)}")
+        print(f"   Response time promedio: {df_success['response_time'].mean():.3f}s")
+        print(f"   Server time promedio: {df_success['server_time'].mean():.3f}s")
+        print(f"   Network latency promedio: {df_success['network_latency'].mean():.3f}s")
+
 if __name__ == "__main__":
     print("--- Iniciando Generación de Gráficos ---")
     preparar_entorno()
-    
+
     graficar_cpu()
     graficar_latencia()
     graficar_red()
     graficar_io()
-    
+    graficar_load_test()
+    graficar_response_time()
+
     print(f"\n¡Proceso completado! Revisa la carpeta '{OUTPUT_DIR}'")
