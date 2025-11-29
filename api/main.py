@@ -24,8 +24,7 @@ def procesar_carga(iteraciones: int = 1000000):
 
     Complejidad:
     - CPU: O(N) lineal con iteraciones
-    - RAM: O(N) lineal con iteraciones (~200 bytes por iteración)
-
+    - RAM: O(N) lineal con iteraciones
     """
 
     start_time = time.time()
@@ -39,23 +38,16 @@ def procesar_carga(iteraciones: int = 1000000):
         valor = math.sqrt(i) * math.sin(i)
         resultado += valor
 
-        # Consumo de RAM lineal: almacenar resultados
-        # Cada diccionario consume ~200 bytes aproximadamente
-        datos = {
-            'iteracion': i,
-            'valor': valor,
-            'sqrt': math.sqrt(i),
-            'sin': math.sin(i),
-            'resultado_acumulado': resultado
-        }
-        resultados_memoria.append(datos)
+        # Consumo de RAM lineal: almacenar solo el valor calculado
+        # Cada float consume ~28 bytes aproximadamente
+        resultados_memoria.append(valor)
 
     end_time = time.time()
     execution_time = (end_time - start_time)
 
     # Calcular memoria utilizada
-    # Cada dict con 5 elementos: ~200 bytes aproximadamente
-    memoria_bytes = len(resultados_memoria) * 200
+    # Cada float: ~28 bytes aproximadamente
+    memoria_bytes = len(resultados_memoria) * 28
     memoria_mb = memoria_bytes / (1024 * 1024)
 
     # Devuelve una respuesta JSON

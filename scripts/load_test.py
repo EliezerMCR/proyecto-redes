@@ -16,7 +16,7 @@ SERVER_URL = "http://100.107.204.120/cpu"
 OUTPUT_FILE = "load_test_results.csv"
 
 # Aumentamos para saturar los 4 workers sugeridos
-USUARIOS_CONCURRENTES = 5000
+USUARIOS_CONCURRENTES = 50
 
 # Queremos que dure. Si cada request tarda 0.5s...
 # 5000 requests / 50 users = 100 rondas. 100 * 0.5s = ~50 segundos.
