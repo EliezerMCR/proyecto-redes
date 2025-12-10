@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Monitoreo - Redes I</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #333;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #00d4ff;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .header .status {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .header .status.connected {
+            color: #4ade80;
+        }
+
+        .header .status.disconnected {
+            color: #f87171;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            font-size: 1rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card h2 .icon {
+            font-size: 1.2rem;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 5px;
+        }
+
+        .metric-value.warning {
+            color: #fbbf24;
+        }
+
+        .metric-value.danger {
+            color: #f87171;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .chart-container {
+            height: 200px;
+            margin-top: 15px;
+        }
+
+        .wide-card {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 768px) {
+            .wide-card {
+                grid-column: span 1;
+            }
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #00ff88);
+            transition: width 0.5s ease;
+        }
+
+        .progress-bar .fill.warning {
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+        }
+
+        .progress-bar .fill.danger {
+            background: linear-gradient(90deg, #f87171, #dc2626);
+        }
+
+        .two-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .timestamp {
+            text-align: center;
+            color: #666;
+            font-size: 0.8rem;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Dashboard de Monitoreo</h1>
+        <div class="status disconnected" id="connection-status">Conectando...</div>
+    </div>
+
+    <div class="dashboard">
+        <!-- CPU -->
+        <div class="card">
+            <h2><span class="icon">⚡</span> CPU</h2>
+            <div class="metric-value" id="cpu-total">--</div>
+            <div class="metric-label">% Uso Total</div>
+            <div class="progress-bar">
+                <div class="fill" id="cpu-bar" style="width: 0%"></div>
+            </div>
+            <div class="chart-container">
+                <canvas id="cpu-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Memoria -->
+        <div class="card">
+            <h2><span class="icon">💾</span> Memoria</h2>
+            <div class="metric-value" id="mem-percent">--</div>
+            <div class="metric-label">% Uso</div>
+            <div class="progress-bar">
+                <div class="fill" id="mem-bar" style="width: 0%"></div>
+            </div>
+            <div class="two-cols" style="margin-top: 15px;">
+                <div>
+                    <div style="font-size: 1.5rem; color: #4ade80;" id="mem-used">-- MB</div>
+                    <div class="metric-label">En Uso</div>
+                </div>
+                <div>
+                    <div style="font-size: 1.5rem; color: #60a5fa;" id="mem-free">-- MB</div>
+                    <div class="metric-label">Libre</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Load Average -->
+        <div class="card">
+            <h2><span class="icon">📊</span> Carga del Sistema</h2>
+            <div class="metric-value" id="load1">--</div>
+            <div class="metric-label">Load Average (1 min)</div>
+            <div class="chart-container">
+                <canvas id="load-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Red -->
+        <div class="card">
+            <h2><span class="icon">🌐</span> Tráfico de Red</h2>
+            <div class="two-cols">
+                <div>
+                    <div class="metric-value" style="font-size: 1.8rem; color: #4ade80;" id="net-rx">--</div>
+                    <div class="metric-label">RX (KB/s)</div>
+                </div>
+                <div>
+                    <div class="metric-value" style="font-size: 1.8rem; color: #60a5fa;" id="net-tx">--</div>
+                    <div class="metric-label">TX (KB/s)</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="net-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Latencia -->
+        <div class="card wide-card">
+            <h2><span class="icon">⏱️</span> Latencia HTTP</h2>
+            <div class="two-cols">
+                <div>
+                    <div class="metric-value" id="latency">--</div>
+                    <div class="metric-label">ms (Tiempo Total)</div>
+                </div>
+                <div>
+                    <div class="metric-value" style="font-size: 1.5rem;" id="http-code">--</div>
+                    <div class="metric-label">Código HTTP</div>
+                </div>
+            </div>
+            <div class="chart-container" style="height: 150px;">
+                <canvas id="latency-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="timestamp">
+        Última actualización: <span id="last-update">--</span>
+    </div>
+
+    <script>
+        // Configuración de gráficos
+        const chartConfig = {
+            type: 'line',
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 0 },
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { display: false },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#333' },
+                        ticks: { color: '#888' }
+                    }
+                },
+                elements: {
+                    point: { radius: 0 },
+                    line: { tension: 0.3, borderWidth: 2 }
+                }
+            }
+        };
+
+        // Crear gráficos
+        const cpuChart = new Chart(document.getElementById('cpu-chart'), {
+            ...chartConfig,
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    borderColor: '#00d4ff',
+                    backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                    fill: true
+                }]
+            }
+        });
+
+        const loadChart = new Chart(document.getElementById('load-chart'), {
+            ...chartConfig,
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    fill: true
+                }]
+            }
+        });
+
+        const netChart = new Chart(document.getElementById('net-chart'), {
+            ...chartConfig,
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'RX',
+                        data: [],
+                        borderColor: '#4ade80',
+                        backgroundColor: 'rgba(74, 222, 128, 0.1)',
+                        fill: true
+                    },
+                    {
+                        label: 'TX',
+                        data: [],
+                        borderColor: '#60a5fa',
+                        backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                ...chartConfig.options,
+                plugins: { legend: { display: true, labels: { color: '#888' } } }
+            }
+        });
+
+        const latencyChart = new Chart(document.getElementById('latency-chart'), {
+            ...chartConfig,
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    borderColor: '#f87171',
+                    backgroundColor: 'rgba(248, 113, 113, 0.1)',
+                    fill: true
+                }]
+            }
+        });
+
+        // Función para actualizar el dashboard
+        function updateDashboard(data) {
+            if (data.error) {
+                console.error('Error:', data.error);
+                return;
+            }
+
+            // CPU
+            const cpuTotal = data.cpu.total;
+            document.getElementById('cpu-total').textContent = cpuTotal.toFixed(1) + '%';
+            document.getElementById('cpu-bar').style.width = cpuTotal + '%';
+
+            const cpuBar = document.getElementById('cpu-bar');
+            const cpuValue = document.getElementById('cpu-total');
+            cpuBar.className = 'fill' + (cpuTotal > 90 ? ' danger' : cpuTotal > 70 ? ' warning' : '');
+            cpuValue.className = 'metric-value' + (cpuTotal > 90 ? ' danger' : cpuTotal > 70 ? ' warning' : '');
+
+            // Memoria
+            const memPercent = data.memory.percent;
+            document.getElementById('mem-percent').textContent = memPercent.toFixed(1) + '%';
+            document.getElementById('mem-used').textContent = data.memory.used_mb.toFixed(0) + ' MB';
+            document.getElementById('mem-free').textContent = data.memory.free_mb.toFixed(0) + ' MB';
+            document.getElementById('mem-bar').style.width = memPercent + '%';
+
+            const memBar = document.getElementById('mem-bar');
+            memBar.className = 'fill' + (memPercent > 90 ? ' danger' : memPercent > 70 ? ' warning' : '');
+
+            // Load
+            document.getElementById('load1').textContent = data.load.load1.toFixed(2);
+
+            // Red
+            document.getElementById('net-rx').textContent = data.network.rx_kbs.toFixed(1);
+            document.getElementById('net-tx').textContent = data.network.tx_kbs.toFixed(1);
+
+            // Latencia
+            const latency = data.latency.total_ms;
+            document.getElementById('latency').textContent = latency.toFixed(1);
+            document.getElementById('http-code').textContent = data.latency.http_code;
+
+            const latencyValue = document.getElementById('latency');
+            latencyValue.className = 'metric-value' + (latency > 2000 ? ' danger' : latency > 500 ? ' warning' : '');
+
+            // Actualizar gráficos con historial
+            const labels = Array(data.history.cpu.length).fill('');
+
+            cpuChart.data.labels = labels;
+            cpuChart.data.datasets[0].data = data.history.cpu;
+            cpuChart.update('none');
+
+            loadChart.data.labels = labels;
+            loadChart.data.datasets[0].data = data.history.load;
+            loadChart.update('none');
+
+            netChart.data.labels = labels;
+            netChart.data.datasets[0].data = data.history.net_rx;
+            netChart.data.datasets[1].data = data.history.net_tx;
+            netChart.update('none');
+
+            latencyChart.data.labels = labels;
+            latencyChart.data.datasets[0].data = data.history.latency;
+            latencyChart.update('none');
+
+            // Timestamp
+            const now = new Date();
+            document.getElementById('last-update').textContent = now.toLocaleTimeString();
+        }
+
+        // Conectar a SSE
+        function connectSSE() {
+            const statusEl = document.getElementById('connection-status');
+            statusEl.textContent = 'Conectando...';
+            statusEl.className = 'status';
+
+            const eventSource = new EventSource('/api/stream');
+
+            eventSource.onopen = function() {
+                statusEl.textContent = 'Conectado';
+                statusEl.className = 'status connected';
+            };
+
+            eventSource.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    updateDashboard(data);
+                } catch (e) {
+                    console.error('Error parsing data:', e);
+                }
+            };
+
+            eventSource.onerror = function() {
+                statusEl.textContent = 'Desconectado - Reintentando...';
+                statusEl.className = 'status disconnected';
+                eventSource.close();
+
+                // Reintentar en 3 segundos
+                setTimeout(connectSSE, 3000);
+            };
+        }
+
+        // Iniciar conexión
+        connectSSE();
+    </script>
+</body>
+</html>

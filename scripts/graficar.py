@@ -17,6 +17,7 @@ IO_FILE = os.path.join(INPUT_DIR, "io_metrics.csv")
 
 # Archivos de pruebas de carga y monitoreo
 LOAD_TEST_FILE = "load_test_results.csv"
+LOAD_TEST_GRADUAL_FILE = "load_test_gradual_results.csv"
 RESPONSE_TIME_FILE = "response_time_metrics.csv"
 
 def preparar_entorno():
@@ -326,6 +327,143 @@ def graficar_response_time():
         print(f"   Server time promedio: {df_success['server_time'].mean():.3f}s")
         print(f"   Network latency promedio: {df_success['network_latency'].mean():.3f}s")
 
+
+def graficar_load_test_gradual():
+    """Grafica los resultados de la prueba de carga gradual con fases"""
+    if not os.path.exists(LOAD_TEST_GRADUAL_FILE):
+        print(f"Saltando {LOAD_TEST_GRADUAL_FILE}: Archivo no encontrado.")
+        return
+
+    print(f"Graficando Load Test Gradual desde {LOAD_TEST_GRADUAL_FILE}...")
+
+    try:
+        df = pd.read_csv(LOAD_TEST_GRADUAL_FILE)
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df = df.sort_values('timestamp')
+    except Exception as e:
+        print(f"Error leyendo {LOAD_TEST_GRADUAL_FILE}: {e}")
+        return
+
+    # Colores por fase
+    fases = df['fase'].unique()
+    colors = plt.cm.viridis([i / len(fases) for i in range(len(fases))])
+    fase_colors = dict(zip(fases, colors))
+
+    fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+
+    # 1. Tiempos de respuesta por fase (scatter + líneas de separación)
+    ax1 = axes[0, 0]
+    for fase in fases:
+        df_fase = df[(df['fase'] == fase) & (df['success'] == True)]
+        if not df_fase.empty:
+            ax1.scatter(df_fase['timestamp'], df_fase['response_time'],
+                       alpha=0.4, s=15, c=[fase_colors[fase]], label=fase)
+
+    # Agregar líneas verticales para separar fases
+    fase_changes = df.groupby('fase')['timestamp'].min().sort_values()
+    for fase, ts in fase_changes.items():
+        ax1.axvline(x=ts, color='white', linestyle='--', alpha=0.5, linewidth=1)
+        ax1.text(ts, ax1.get_ylim()[1] * 0.95, fase, rotation=90, fontsize=8,
+                color='white', alpha=0.7, va='top')
+
+    ax1.set_title('Tiempos de Respuesta por Fase', fontsize=12, fontweight='bold')
+    ax1.set_ylabel('Tiempo (s)')
+    ax1.set_xlabel('Tiempo')
+    ax1.legend(loc='upper left', fontsize=8)
+    ax1.grid(True, alpha=0.3)
+    ax1.tick_params(axis='x', rotation=45)
+
+    # 2. Boxplot de tiempos por fase
+    ax2 = axes[0, 1]
+    df_success = df[df['success'] == True]
+    if not df_success.empty:
+        data_by_fase = [df_success[df_success['fase'] == f]['response_time'].values for f in fases]
+        bp = ax2.boxplot(data_by_fase, labels=fases, patch_artist=True)
+        for patch, color in zip(bp['boxes'], colors):
+            patch.set_facecolor(color)
+            patch.set_alpha(0.7)
+    ax2.set_title('Distribución de Tiempos por Fase', fontsize=12, fontweight='bold')
+    ax2.set_ylabel('Tiempo (s)')
+    ax2.set_xlabel('Fase')
+    ax2.grid(True, alpha=0.3, axis='y')
+    ax2.tick_params(axis='x', rotation=45)
+
+    # 3. Throughput por fase (barras)
+    ax3 = axes[1, 0]
+    # Calcular throughput promedio por fase
+    throughput_data = []
+    for fase in fases:
+        df_fase = df[df['fase'] == fase]
+        if not df_fase.empty:
+            duracion = (df_fase['timestamp'].max() - df_fase['timestamp'].min()).total_seconds()
+            if duracion > 0:
+                throughput = len(df_fase) / duracion
+            else:
+                throughput = len(df_fase)
+            throughput_data.append(throughput)
+        else:
+            throughput_data.append(0)
+
+    bars = ax3.bar(fases, throughput_data, color=colors, alpha=0.8, edgecolor='white')
+    ax3.set_title('Throughput por Fase', fontsize=12, fontweight='bold')
+    ax3.set_ylabel('Requests/s')
+    ax3.set_xlabel('Fase')
+    ax3.grid(True, alpha=0.3, axis='y')
+    ax3.tick_params(axis='x', rotation=45)
+
+    # Agregar valores encima de las barras
+    for bar, val in zip(bars, throughput_data):
+        ax3.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5,
+                f'{val:.1f}', ha='center', va='bottom', fontsize=9)
+
+    # 4. Tasa de éxito por fase (barras apiladas)
+    ax4 = axes[1, 1]
+    success_data = []
+    error_data = []
+    for fase in fases:
+        df_fase = df[df['fase'] == fase]
+        success = df_fase['success'].sum()
+        errors = len(df_fase) - success
+        success_data.append(success)
+        error_data.append(errors)
+
+    x = range(len(fases))
+    width = 0.6
+    bars1 = ax4.bar(x, success_data, width, label='Exitosos', color='#4ade80', alpha=0.8)
+    bars2 = ax4.bar(x, error_data, width, bottom=success_data, label='Fallidos', color='#f87171', alpha=0.8)
+
+    ax4.set_title('Éxitos vs Errores por Fase', fontsize=12, fontweight='bold')
+    ax4.set_ylabel('Cantidad de Requests')
+    ax4.set_xlabel('Fase')
+    ax4.set_xticks(x)
+    ax4.set_xticklabels(fases, rotation=45)
+    ax4.legend()
+    ax4.grid(True, alpha=0.3, axis='y')
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(OUTPUT_DIR, "7_load_test_gradual.png"), dpi=150)
+    plt.close()
+
+    # Imprimir estadísticas por fase
+    print(f"\n   Estadísticas por fase:")
+    print(f"   {'Fase':<15} {'Total':>8} {'OK':>8} {'Fail':>8} {'Media':>10} {'P95':>10}")
+    print(f"   {'-'*15} {'-'*8} {'-'*8} {'-'*8} {'-'*10} {'-'*10}")
+
+    for fase in fases:
+        df_fase = df[df['fase'] == fase]
+        total = len(df_fase)
+        exitosos = df_fase['success'].sum()
+        fallidos = total - exitosos
+        df_fase_ok = df_fase[df_fase['success'] == True]
+        if not df_fase_ok.empty:
+            media = df_fase_ok['response_time'].mean()
+            tiempos = df_fase_ok['response_time'].sort_values().values
+            p95 = tiempos[int(len(tiempos) * 0.95)] if len(tiempos) > 1 else tiempos[0]
+            print(f"   {fase:<15} {total:>8} {exitosos:>8} {fallidos:>8} {media:>9.3f}s {p95:>9.3f}s")
+        else:
+            print(f"   {fase:<15} {total:>8} {exitosos:>8} {fallidos:>8} {'N/A':>10} {'N/A':>10}")
+
+
 if __name__ == "__main__":
     print("--- Iniciando Generación de Gráficos ---")
     preparar_entorno()
@@ -336,5 +474,6 @@ if __name__ == "__main__":
     graficar_io()
     graficar_load_test()
     graficar_response_time()
+    graficar_load_test_gradual()
 
     print(f"\n¡Proceso completado! Revisa la carpeta '{OUTPUT_DIR}'")

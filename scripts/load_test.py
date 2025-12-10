@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Script de prueba de carga para sobrecargar el endpoint /cpu
-Ejecuta múltiples usuarios concurrentes contra http://100.107.204.120/cpu
+Script de prueba de carga para sobrecargar el endpoint /stress
+Ejecuta múltiples usuarios concurrentes contra el servidor
 """
 
 import asyncio
@@ -10,21 +10,31 @@ import time
 from datetime import datetime
 from statistics import mean, median
 import csv
+import sys
+import os
+
+# Agregar el directorio padre al path para importar config
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+try:
+    from config import SERVER_URL as BASE_URL
+except ImportError:
+    BASE_URL = "http://localhost:5000"
 
 # Configuración
-SERVER_URL = "http://100.107.204.120/cpu"
+SERVER_URL = f"{BASE_URL}/stress"
 OUTPUT_FILE = "load_test_results.csv"
 
-# Aumentamos para saturar los 4 workers sugeridos
+# Aumentamos para saturar los workers
 USUARIOS_CONCURRENTES = 500
-
-# Queremos que dure. Si cada request tarda 0.5s...
-# 5000 requests / 50 users = 100 rondas. 100 * 0.5s = ~50 segundos.
-# Pongamos 20,000 para asegurar unos 3-4 minutos de castigo.
 TOTAL_REQUESTS = 8000
 
-# Mantenemos esto alto para forzar CPU
-ITERACIONES = 10000000
+# Parámetros de estrés (CPU + RAM + RED)
+STRESS_PARAMS = {
+    'cpu_iterations': 1000000,
+    'memory_mb': 10,
+    'response_kb': 512
+}
 
 
 async def hacer_request(session, user_id, request_num):
@@ -32,10 +42,13 @@ async def hacer_request(session, user_id, request_num):
     start = time.time()
 
     try:
-        params = {'iteraciones': ITERACIONES}
-        async with session.get(SERVER_URL, params=params, timeout=aiohttp.ClientTimeout(total=300)) as response:
-            data = await response.json()
+        async with session.get(SERVER_URL, params=STRESS_PARAMS, timeout=aiohttp.ClientTimeout(total=300)) as response:
+            # /stress devuelve datos binarios, leer para completar la transferencia
+            await response.read()
             elapsed = time.time() - start
+
+            # El tiempo del servidor está en el header
+            server_time = float(response.headers.get('X-Server-Time', 0))
 
             return {
                 'timestamp': datetime.utcnow().isoformat(),
@@ -43,7 +56,7 @@ async def hacer_request(session, user_id, request_num):
                 'request_num': request_num,
                 'status': response.status,
                 'response_time': elapsed,
-                'server_time': data.get('tiempo_ejecucion_seg', 0),
+                'server_time': server_time,
                 'success': True
             }
     except Exception as e:
@@ -74,7 +87,7 @@ async def ejecutar_prueba():
     print(f"URL: {SERVER_URL}")
     print(f"Usuarios: {USUARIOS_CONCURRENTES}")
     print(f"Total requests: {TOTAL_REQUESTS}")
-    print(f"Iteraciones por request: {ITERACIONES:,}")
+    print(f"Params: cpu={STRESS_PARAMS['cpu_iterations']:,}, ram={STRESS_PARAMS['memory_mb']}MB, red={STRESS_PARAMS['response_kb']}KB")
     print(f"{'='*60}\n")
 
     start_time = time.time()
@@ -130,7 +143,7 @@ async def ejecutar_prueba():
 
 
 if __name__ == '__main__':
-    print("\nTip: Puedes editar USUARIOS_CONCURRENTES, TOTAL_REQUESTS e ITERACIONES en el script\n")
+    print("\nTip: Puedes editar USUARIOS_CONCURRENTES, TOTAL_REQUESTS y STRESS_PARAMS en el script\n")
 
     try:
         asyncio.run(ejecutar_prueba())

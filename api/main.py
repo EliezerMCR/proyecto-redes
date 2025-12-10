@@ -1,8 +1,10 @@
 import fastapi
+from fastapi import Response
 import uvicorn
 import math
 import time
 import sys
+import os
 
 app = fastapi.FastAPI()
 
@@ -64,6 +66,53 @@ def procesar_carga(iteraciones: int = 1000000):
     # del resultados_memoria
 
     return response
+
+
+@app.get("/stress")
+def full_stress(
+    cpu_iterations: int = 500000,
+    memory_mb: int = 10,
+    response_kb: int = 512
+):
+    """
+    Endpoint que estresa CPU, RAM y RED simultáneamente.
+
+    Parámetros:
+    - cpu_iterations: Número de operaciones matemáticas (controla CPU)
+    - memory_mb: Megabytes de datos a mantener en memoria (controla RAM)
+    - response_kb: Kilobytes de datos en la respuesta (controla tráfico de RED)
+    """
+    start_time = time.time()
+
+    # 1. ESTRÉS DE CPU - Cálculos matemáticos intensivos
+    resultado_cpu = 0
+    for i in range(cpu_iterations):
+        resultado_cpu += math.sqrt(i) * math.sin(i) * math.cos(i)
+
+    # 2. ESTRÉS DE RAM - Crear datos en memoria
+    # Cada chunk es 1KB, creamos memory_mb * 1024 chunks
+    memory_data = [os.urandom(1024) for _ in range(memory_mb * 1024)]
+    memory_bytes_used = len(memory_data) * 1024
+
+    # 3. ESTRÉS DE RED - Generar respuesta grande
+    response_data = os.urandom(response_kb * 1024)
+
+    elapsed = time.time() - start_time
+
+    # Retornar respuesta binaria con headers de métricas
+    return Response(
+        content=response_data,
+        media_type="application/octet-stream",
+        headers={
+            "X-CPU-Iterations": str(cpu_iterations),
+            "X-Memory-MB": str(memory_mb),
+            "X-Response-KB": str(response_kb),
+            "X-Memory-Bytes-Used": str(memory_bytes_used),
+            "X-Server-Time": str(round(elapsed, 6)),
+            "X-CPU-Result": str(round(resultado_cpu, 2))
+        }
+    )
+
 
 # Ejecutar el script directamente con: python main.py
 if __name__ == "__main__":

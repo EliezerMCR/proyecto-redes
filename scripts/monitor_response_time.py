@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Monitoreo continuo de tiempos de respuesta
-Hace requests periódicos a http://100.107.204.120/cpu y registra los tiempos
+Hace requests periódicos al servidor y registra los tiempos
 """
 
 import requests
@@ -10,11 +10,26 @@ import csv
 from datetime import datetime
 import signal
 import sys
+import os
+
+# Agregar el directorio padre al path para importar config
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+try:
+    from config import SERVER_URL as BASE_URL, LOCAL_MODE
+except ImportError:
+    BASE_URL = "http://localhost:5000"
+    LOCAL_MODE = True
 
 # Configuración
-SERVER_URL = "http://100.107.204.120/cpu"
+SERVER_URL = f"{BASE_URL}/stress"
 INTERVALO_SEGUNDOS = 5
-ITERACIONES = 1000000
+# Parámetros ligeros para monitoreo (no sobrecargar)
+STRESS_PARAMS = {
+    'cpu_iterations': 1000,
+    'memory_mb': 1,
+    'response_kb': 1
+}
 OUTPUT_FILE = "response_time_metrics.csv"
 
 # Variables globales
@@ -37,13 +52,12 @@ def hacer_request():
     start = time.time()
 
     try:
-        params = {'iteraciones': ITERACIONES}
-        response = requests.get(SERVER_URL, params=params, timeout=300)
+        response = requests.get(SERVER_URL, params=STRESS_PARAMS, timeout=300)
         elapsed = time.time() - start
 
         if response.status_code == 200:
-            data = response.json()
-            server_time = data.get('tiempo_ejecucion_seg', 0)
+            # /stress devuelve datos binarios, el tiempo está en el header
+            server_time = float(response.headers.get('X-Server-Time', 0))
             network_latency = elapsed - server_time
 
             return {
@@ -90,7 +104,7 @@ def main():
     print(f"{'='*70}")
     print(f"URL: {SERVER_URL}")
     print(f"Intervalo: {INTERVALO_SEGUNDOS}s")
-    print(f"Iteraciones: {ITERACIONES:,}")
+    print(f"Params: cpu={STRESS_PARAMS['cpu_iterations']}, ram={STRESS_PARAMS['memory_mb']}MB, red={STRESS_PARAMS['response_kb']}KB")
     print(f"Archivo: {OUTPUT_FILE}")
     print(f"{'='*70}")
     print(f"\nPresiona Ctrl+C para detener\n")

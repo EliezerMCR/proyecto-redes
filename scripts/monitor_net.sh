@@ -5,7 +5,18 @@
 # --- CONFIGURACIÓN ---
 mkdir -p metrics
 OUTFILE="metrics/net_metrics.csv"
-IFACE="enp0s3"
+
+# Interfaz de red: usa variable de entorno o detecta automáticamente
+# Para especificar manualmente: export NETWORK_IFACE="eth0"
+if [ -z "$NETWORK_IFACE" ]; then
+    # Detectar la interfaz principal (la que tiene IP, excluyendo lo)
+    IFACE=$(ip route | grep default | awk '{print $5}' | head -1)
+    if [ -z "$IFACE" ]; then
+        IFACE="eth0"  # Fallback
+    fi
+else
+    IFACE="$NETWORK_IFACE"
+fi
 
 export LC_NUMERIC=C
 

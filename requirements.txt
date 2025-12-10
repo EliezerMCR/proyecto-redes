@@ -9,3 +9,6 @@ matplotlib>=3.8.0
 # Dependencias para pruebas de carga y monitoreo
 aiohttp>=3.9.0
 requests>=2.31.0
+
+# Dependencias para el dashboard en tiempo real
+flask>=3.0.0

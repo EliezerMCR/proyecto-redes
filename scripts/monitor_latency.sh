@@ -8,10 +8,14 @@ OUTFILE="metrics/latency_metrics.csv"
 export LC_NUMERIC=C
 
 # --- DEFINIR OBJETIVO ---
-# Usamos la IP de la VM (interfaz puente) y el puerto 80 (Nginx)
-# Ajusta el parámetro iteraciones=100 para que la respuesta sea rápida 
-# y midamos latencia de red, no tiempo de procesamiento de CPU.
-TARGET_URL="http://192.168.9.109/cpu?iteraciones=100"
+# Para usar en LOCAL: descomentar la siguiente línea y comentar la de VM
+# SERVER_URL="http://localhost:5000"
+
+# Para usar en VM (producción):
+SERVER_URL="http://192.168.9.109"
+
+# Endpoint /stress con parámetros ligeros (para medir latencia sin sobrecargar)
+TARGET_URL="${SERVER_URL}/stress?cpu_iterations=1000&memory_mb=1&response_kb=1"
 
 echo "--> Guardando métricas en: $OUTFILE"
 echo "--> Objetivo: $TARGET_URL"
