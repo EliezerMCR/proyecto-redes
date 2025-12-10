@@ -8,7 +8,7 @@ Modifica estas variables según tu entorno.
 # =============================================================================
 # True  = Todo corre en localhost (desarrollo/pruebas locales)
 # False = Servidor remoto (VM con Nginx)
-LOCAL_MODE = True
+LOCAL_MODE = False
 
 # =============================================================================
 # CONFIGURACIÓN DEL SERVIDOR
