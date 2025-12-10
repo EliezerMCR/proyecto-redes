@@ -12,7 +12,7 @@ export LC_NUMERIC=C
 # SERVER_URL="http://localhost:5000"
 
 # Para usar en VM (producción):
-SERVER_URL="http://192.168.9.109"
+SERVER_URL="http://100.107.204.120"
 
 # Endpoint /stress con parámetros ligeros (para medir latencia sin sobrecargar)
 TARGET_URL="${SERVER_URL}/stress?cpu_iterations=1000&memory_mb=1&response_kb=1"

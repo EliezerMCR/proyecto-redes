@@ -47,7 +47,9 @@ def leer_csv(filepath):
 
 def graficar_cpu():
     df = leer_csv(CPU_FILE)
-    if df is None: return
+    if df is None or df.empty:
+        print(f"Saltando CPU: Sin datos en {CPU_FILE}")
+        return
 
     print(f"Graficando CPU desde {CPU_FILE}...")
     
@@ -85,7 +87,9 @@ def graficar_cpu():
 
 def graficar_latencia():
     df = leer_csv(LATENCY_FILE)
-    if df is None: return
+    if df is None or df.empty:
+        print(f"Saltando Latencia: Sin datos en {LATENCY_FILE}")
+        return
 
     print(f"Graficando Latencia desde {LATENCY_FILE}...")
     
@@ -111,7 +115,9 @@ def graficar_latencia():
 
 def graficar_red():
     df = leer_csv(NET_FILE)
-    if df is None: return
+    if df is None or df.empty:
+        print(f"Saltando Red: Sin datos en {NET_FILE}")
+        return
 
     print(f"Graficando Red desde {NET_FILE}...")
     
@@ -152,7 +158,8 @@ def graficar_io():
     Ajustaremos nombres genéricos, verifica tu CSV de IO.
     """
     df = leer_csv(IO_FILE)
-    if df is None: 
+    if df is None or df.empty:
+        print(f"Saltando I/O: Sin datos en {IO_FILE}")
         return
 
     print(f"Graficando Disco desde {IO_FILE}...")
@@ -194,16 +201,18 @@ def graficar_load_test():
         print(f"Saltando {LOAD_TEST_FILE}: Archivo no encontrado.")
         return
 
-    print(f"Graficando Load Test desde {LOAD_TEST_FILE}...")
-
     try:
         df = pd.read_csv(LOAD_TEST_FILE)
+        if df.empty:
+            print(f"Saltando {LOAD_TEST_FILE}: Sin datos.")
+            return
         df['timestamp'] = pd.to_datetime(df['timestamp'])
         df = df.sort_values('timestamp')
     except Exception as e:
         print(f"Error leyendo {LOAD_TEST_FILE}: {e}")
         return
 
+    print(f"Graficando Load Test desde {LOAD_TEST_FILE}...")
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
 
     # 1. Tiempos de respuesta a lo largo del tiempo
@@ -274,16 +283,18 @@ def graficar_response_time():
         print(f"Saltando {RESPONSE_TIME_FILE}: Archivo no encontrado.")
         return
 
-    print(f"Graficando Response Time desde {RESPONSE_TIME_FILE}...")
-
     try:
         df = pd.read_csv(RESPONSE_TIME_FILE)
+        if df.empty:
+            print(f"Saltando {RESPONSE_TIME_FILE}: Sin datos.")
+            return
         df['timestamp'] = pd.to_datetime(df['timestamp'])
         df = df.sort_values('timestamp')
     except Exception as e:
         print(f"Error leyendo {RESPONSE_TIME_FILE}: {e}")
         return
 
+    print(f"Graficando Response Time desde {RESPONSE_TIME_FILE}...")
     df_success = df[df['success'] == True]
 
     fig, axes = plt.subplots(2, 1, figsize=(14, 10), sharex=True)
@@ -334,15 +345,18 @@ def graficar_load_test_gradual():
         print(f"Saltando {LOAD_TEST_GRADUAL_FILE}: Archivo no encontrado.")
         return
 
-    print(f"Graficando Load Test Gradual desde {LOAD_TEST_GRADUAL_FILE}...")
-
     try:
         df = pd.read_csv(LOAD_TEST_GRADUAL_FILE)
+        if df.empty:
+            print(f"Saltando {LOAD_TEST_GRADUAL_FILE}: Sin datos.")
+            return
         df['timestamp'] = pd.to_datetime(df['timestamp'])
         df = df.sort_values('timestamp')
     except Exception as e:
         print(f"Error leyendo {LOAD_TEST_GRADUAL_FILE}: {e}")
         return
+
+    print(f"Graficando Load Test Gradual desde {LOAD_TEST_GRADUAL_FILE}...")
 
     # Colores por fase
     fases = df['fase'].unique()

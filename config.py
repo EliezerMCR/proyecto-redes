@@ -27,7 +27,7 @@ else:
 SERVER_URL = f"http://{SERVER_IP}:{SERVER_PORT}" if SERVER_PORT != 80 else f"http://{SERVER_IP}"
 
 # IP para monitoreo interno (cuando el script corre en la misma VM)
-SERVER_IP_LOCAL = "127.0.0.1" if LOCAL_MODE else "192.168.9.109"
+SERVER_IP_LOCAL = "127.0.0.1" if LOCAL_MODE else "100.107.204.120"
 
 # =============================================================================
 # CONFIGURACIÓN DE RED
