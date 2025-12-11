@@ -196,6 +196,9 @@
                     <div class="metric-label">Libre</div>
                 </div>
             </div>
+            <div class="chart-container">
+                <canvas id="mem-chart"></canvas>
+            </div>
         </div>
 
         <!-- Load Average -->
@@ -282,6 +285,19 @@
                     data: [],
                     borderColor: '#00d4ff',
                     backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                    fill: true
+                }]
+            }
+        });
+
+        const memChart = new Chart(document.getElementById('mem-chart'), {
+            ...chartConfig,
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    borderColor: '#a855f7',
+                    backgroundColor: 'rgba(168, 85, 247, 0.1)',
                     fill: true
                 }]
             }
@@ -388,6 +404,10 @@
             cpuChart.data.labels = labels;
             cpuChart.data.datasets[0].data = data.history.cpu;
             cpuChart.update('none');
+
+            memChart.data.labels = labels;
+            memChart.data.datasets[0].data = data.history.memory;
+            memChart.update('none');
 
             loadChart.data.labels = labels;
             loadChart.data.datasets[0].data = data.history.load;
